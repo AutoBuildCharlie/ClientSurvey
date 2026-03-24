@@ -715,8 +715,8 @@
       autoList.innerHTML = selected.map(a => `<div style="background:var(--accent-dim);border:1px solid rgba(0,217,126,0.2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--accent);">✓ ${a}</div>`).join('');
       showScreen('confirm');
     } catch(e) {
-      showToast('Something went wrong. Check your settings.', 'error');
-      console.error(e);
+      showToast(e.message || 'Something went wrong. Check your settings.', 'error');
+      console.error('submitTrial error:', e);
     } finally {
       btn.textContent = 'Add to Sheet ✓';
       btn.disabled = false;
