@@ -559,9 +559,18 @@
     const list = document.getElementById('trial-automation-list');
     list.innerHTML = '';
     const ideaEls = document.querySelectorAll('#results-content .idea-name');
-    const ideas = ideaEls.length > 0
-      ? [...ideaEls].map(el => el.textContent.replace(/^\d+\.\s*/, '').trim())
-      : ['Custom automation'];
+    let ideas = [];
+    if (ideaEls.length > 0) {
+      ideas = [...ideaEls].map(el => el.textContent.replace(/^\d+\.\s*/, '').trim());
+    } else {
+      // Fallback: parse plain numbered lines from raw text
+      const raw = document.getElementById('results-content')?.innerText || '';
+      raw.split('\n').forEach(line => {
+        const m = line.match(/^\d+[\.\)]\s+(.+)/);
+        if (m) ideas.push(m[1].replace(/\*\*/g, '').trim());
+      });
+    }
+    if (ideas.length === 0) ideas.push('Custom automation');
     ideas.forEach(idea => {
       const btn = document.createElement('div');
       btn.textContent = idea;
@@ -802,7 +811,7 @@ Your job:
 1. Write 2-3 bullet points summarising: what business they run, their main pain points, and where they lose the most time or customers.
 
 2. Write a section called "Top Automation Ideas for Your Business" with exactly 5 numbered ideas — the 5 most impactful ones for this specific business. For each idea:
-   - Give it a short, plain-English name
+   - IMPORTANT: Format each idea exactly like this: "1. **Idea Name**" — the name MUST be in bold using double asterisks
    - Write 3-4 sentences max — what it does, how it helps them, and why it matters for their situation. Keep it easy to read out loud.
    - State the main benefit in one short line (e.g. "More repeat customers", "Fewer no-shows", "Less manual work")
    - Keep language simple, casual, and conversational — no jargon, no technical terms
