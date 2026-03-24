@@ -665,6 +665,8 @@
     btn.disabled = true;
 
     const results = [];
+    const ideasText = document.getElementById('results-content')?.innerText || '';
+
     try {
       // 1. Add to Google Sheet
       if (sheetsUrl) {
@@ -675,7 +677,7 @@
           body: JSON.stringify({
             date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             name, business: biz, phone: contact, email, automation,
-            status: 'New', notes
+            status: 'New', notes: notes ? notes + '\n\n--- AI RESULTS ---\n' + ideasText : '--- AI RESULTS ---\n' + ideasText
           })
         });
         results.push('✓ Added to Google Sheet');
@@ -685,7 +687,6 @@
       const ejsPK = localStorage.getItem('ejs_public_key');
       const ejsSID = localStorage.getItem('ejs_service_id');
       const ejsTID = localStorage.getItem('ejs_template_id');
-      const ideasText = document.getElementById('results-content')?.innerText || '';
 
       if (ejsPK && ejsSID && ejsTID && email) {
         emailjs.init(ejsPK);
