@@ -768,7 +768,10 @@
     localStorage.setItem('abc_pitch_count', pitchCount);
     answers = new Array(QUESTIONS.length).fill('');
     currentQ = 0;
-    document.getElementById('session-badge').textContent = 'Session Live';
+    const badge = document.getElementById('session-badge');
+    badge.textContent = 'Session Live';
+    badge.style.borderColor = 'var(--accent)';
+    badge.style.color = 'var(--accent)';
     startTimer();
     showScreen('survey');
     renderQuestion();
@@ -974,7 +977,10 @@ Important rules:
     answers = new Array(QUESTIONS.length).fill('');
     currentQ = 0;
     stopTimer();
-    document.getElementById('session-badge').textContent = 'Ready';
+    const rb = document.getElementById('session-badge');
+    rb.textContent = 'Ready';
+    rb.style.borderColor = 'var(--border)';
+    rb.style.color = 'var(--text-dim)';
     document.getElementById('pitch-counter').textContent = `${pitchCount} session${pitchCount !== 1 ? 's' : ''} run`;
     showScreen('setup');
   }
