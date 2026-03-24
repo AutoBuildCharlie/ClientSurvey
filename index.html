@@ -297,8 +297,10 @@
     AutoBuildCharlie
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
+    <div class="session-badge" id="session-timer" style="display:none;">⏱ 0:00</div>
     <div class="session-badge" id="session-badge">Ready</div>
-    <button onclick="openKeySettings()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-mid);padding:4px 14px;border-radius:20px;font-size:12px;cursor:pointer;">⚙ Settings</button>
+    <button id="pitch-mode-btn" onclick="togglePitchMode()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-mid);padding:4px 14px;border-radius:20px;font-size:12px;cursor:pointer;">🎯 Pitch Mode</button>
+    <button id="settings-btn" onclick="openKeySettings()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-mid);padding:4px 14px;border-radius:20px;font-size:12px;cursor:pointer;">⚙ Settings</button>
   </div>
 </header>
 
@@ -358,6 +360,10 @@
       </div>
     </div>
 
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+      <span id="pitch-counter" style="font-size:12px;color:var(--text-dim);"></span>
+      <span style="font-size:12px;color:var(--text-dim);">Settings are saved on this device</span>
+    </div>
     <button class="btn btn-primary" onclick="startSurvey()">Start New Session →</button>
   </div>
 
@@ -411,6 +417,46 @@
       <button class="btn btn-secondary" onclick="copyResults()">Copy to Clipboard</button>
       <button class="btn btn-green" onclick="openTrialModal()">✓ Start Free Trial</button>
       <button class="btn btn-primary" onclick="newSession()">New Session →</button>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION SCREEN -->
+  <div class="screen" id="screen-confirm">
+    <div style="text-align:center;padding:16px 0;">
+      <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+      <h2 style="font-size:28px;font-weight:800;color:var(--accent);margin-bottom:8px;">You're in the program!</h2>
+      <p style="color:var(--text-mid);font-size:15px;" id="confirm-subtitle">Welcome aboard.</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">CLIENT</div>
+        <div style="font-size:16px;font-weight:700;" id="confirm-name">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">BUSINESS</div>
+        <div style="font-size:15px;color:var(--text-mid);" id="confirm-biz">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;">AUTOMATIONS SELECTED</div>
+        <div id="confirm-automations" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:4px;">⏰ Follow-Up Reminder</div>
+        <div style="font-size:13px;color:var(--text-mid);" id="confirm-followup">Follow up in 48 hours to confirm next steps.</div>
+      </div>
+      <div style="background:var(--accent-dim);border:1px solid rgba(0,217,126,0.2);border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;">What happens next</div>
+        <div style="font-size:13px;color:var(--text-mid);line-height:1.7;">
+          ✓ Client added to your Google Sheet<br>
+          ✓ Welcome email sent to their inbox<br>
+          ✓ You have 2 days to set up their first automation<br>
+          ✓ 14-day free trial begins once it's live
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-secondary" onclick="newSession()">New Session →</button>
+      <button class="btn btn-primary" onclick="showScreen('results')">← Back to Results</button>
     </div>
   </div>
 
@@ -542,16 +588,27 @@
     if (yourName) localStorage.setItem('abc_survey_name', yourName);
   }
 
+  let pitchCount = parseInt(localStorage.getItem('abc_pitch_count') || '0');
+
   window.addEventListener('load', () => {
     const saved = localStorage.getItem('abc_survey_key');
     const savedName = localStorage.getItem('abc_survey_name');
     if (saved) document.getElementById('api-key').value = saved;
     if (savedName) document.getElementById('your-name').value = savedName;
+    // Show pitch counter
+    document.getElementById('pitch-counter').textContent = pitchCount > 0 ? `${pitchCount} session${pitchCount !== 1 ? 's' : ''} run` : 'First session';
+    // Auto-skip setup if key already saved
+    if (saved) {
+      apiKey = saved;
+      yourName = savedName || 'Cal';
+    }
   });
 
   // ── FREE TRIAL MODAL ─────────────────────────────────────────────────────
   function openTrialModal() {
-    document.getElementById('trial-biz').value = answers[0] || '';
+    document.getElementById('trial-biz').value = '';
+    document.getElementById('trial-name').value = '';
+    document.getElementById('trial-notes').value = '';
     const sheetsUrl = localStorage.getItem('abc_sheets_url');
     document.getElementById('trial-no-url').style.display = sheetsUrl ? 'none' : 'block';
 
@@ -648,7 +705,15 @@
       }
 
       closeTrialModal();
-      showToast(results.join(' · '), 'success');
+      stopTimer();
+      // Show confirmation screen
+      document.getElementById('confirm-name').textContent = name;
+      document.getElementById('confirm-biz').textContent = biz;
+      document.getElementById('confirm-subtitle').textContent = `${name} from ${biz} is now in your pipeline.`;
+      document.getElementById('confirm-followup').textContent = `Follow up with ${name} in 48 hours — confirm you're building their automation and answer any questions.`;
+      const autoList = document.getElementById('confirm-automations');
+      autoList.innerHTML = selected.map(a => `<div style="background:var(--accent-dim);border:1px solid rgba(0,217,126,0.2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--accent);">✓ ${a}</div>`).join('');
+      showScreen('confirm');
     } catch(e) {
       showToast('Something went wrong. Check your settings.', 'error');
       console.error(e);
@@ -664,14 +729,47 @@
     document.getElementById('screen-' + id).classList.add('active');
   }
 
+  // ── SESSION TIMER ─────────────────────────────────────────────────────────
+  let timerInterval = null;
+  let timerSeconds = 0;
+  function startTimer() {
+    timerSeconds = 0;
+    document.getElementById('session-timer').style.display = 'block';
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = Math.floor(timerSeconds / 60);
+      const s = timerSeconds % 60;
+      document.getElementById('session-timer').textContent = `⏱ ${m}:${s.toString().padStart(2,'0')}`;
+    }, 1000);
+  }
+  function stopTimer() {
+    clearInterval(timerInterval);
+    document.getElementById('session-timer').style.display = 'none';
+  }
+
+  // ── PITCH MODE ────────────────────────────────────────────────────────────
+  let pitchMode = false;
+  function togglePitchMode() {
+    pitchMode = !pitchMode;
+    document.getElementById('settings-btn').style.display = pitchMode ? 'none' : 'block';
+    document.getElementById('pitch-mode-btn').textContent = pitchMode ? '✕ Exit Pitch Mode' : '🎯 Pitch Mode';
+    document.getElementById('pitch-mode-btn').style.borderColor = pitchMode ? 'var(--accent)' : 'var(--border)';
+    document.getElementById('pitch-mode-btn').style.color = pitchMode ? 'var(--accent)' : 'var(--text-mid)';
+  }
+
   function startSurvey() {
     apiKey = document.getElementById('api-key').value.trim();
     yourName = document.getElementById('your-name').value.trim() || 'Cal';
     if (!apiKey) { showToast('Please enter your Claude API key.', 'error'); return; }
     saveKey();
+    // Increment pitch counter
+    pitchCount++;
+    localStorage.setItem('abc_pitch_count', pitchCount);
     answers = new Array(QUESTIONS.length).fill('');
     currentQ = 0;
     document.getElementById('session-badge').textContent = 'Session Live';
+    startTimer();
     showScreen('survey');
     renderQuestion();
   }
@@ -819,7 +917,7 @@ Your job:
    - Do NOT put the name on its own line. Do NOT add a line break between the name and the description. Everything on one line.
    - Each idea must connect to something specific they said
 
-3. At the end, write a short section called "Where to Start" with 1-2 questions ${yourName} can ask the owner to help them choose which idea to try first.
+3. At the end, write a short section called "Where to Start" with ONE bold recommendation — tell them directly which idea to start with and exactly why, based on what they said. Format it as: "Start with **[Idea Name]** — [one sentence reason why this one first]." Be decisive, not wishy-washy.
 
 Important rules:
 - Write as if speaking directly to the business owner in simple, friendly language
@@ -875,7 +973,9 @@ Important rules:
   function newSession() {
     answers = new Array(QUESTIONS.length).fill('');
     currentQ = 0;
+    stopTimer();
     document.getElementById('session-badge').textContent = 'Ready';
+    document.getElementById('pitch-counter').textContent = `${pitchCount} session${pitchCount !== 1 ? 's' : ''} run`;
     showScreen('setup');
   }
 
