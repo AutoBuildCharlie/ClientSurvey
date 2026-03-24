@@ -495,7 +495,7 @@
     </div>
 
     <div id="trial-no-url" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px 16px;font-size:13px;color:#f59e0b;margin-bottom:16px;">
-      ⚠ No Google Sheet connected yet. Add your Sheet URL in settings first.
+      ℹ No Google Sheet connected — lead will be saved locally only. Add your Sheet URL in ⚙ Settings to sync.
     </div>
 
     <div style="display:flex;gap:10px;">
@@ -659,7 +659,6 @@
     const sheetsUrl = localStorage.getItem('abc_sheets_url');
 
     if (!name || !biz || !contact) { showToast('Please fill in name, business, and contact.', 'error'); return; }
-    if (!sheetsUrl) { showToast('No Google Sheet connected. Add URL in settings.', 'error'); return; }
 
     const btn = document.querySelector('#trial-modal button[onclick="submitTrial()"]');
     btn.textContent = 'Adding...';
