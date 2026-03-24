@@ -555,21 +555,18 @@
     const sheetsUrl = localStorage.getItem('abc_sheets_url');
     document.getElementById('trial-no-url').style.display = sheetsUrl ? 'none' : 'block';
 
-    // Extract idea names from results
+    // Extract idea names from rendered idea-name elements (pre-ticked)
     const list = document.getElementById('trial-automation-list');
     list.innerHTML = '';
-    const raw = document.getElementById('results-content')?.innerText || '';
-    const lines = raw.split('\n');
-    const ideas = [];
-    lines.forEach(line => {
-      const m = line.match(/^\d+[\.\)]\s+(.+)/);
-      if (m) ideas.push(m[1].replace(/\*\*/g, '').trim());
-    });
-    if (ideas.length === 0) ideas.push('Custom automation');
+    const ideaEls = document.querySelectorAll('#results-content .idea-name');
+    const ideas = ideaEls.length > 0
+      ? [...ideaEls].map(el => el.textContent.replace(/^\d+\.\s*/, '').trim())
+      : ['Custom automation'];
     ideas.forEach(idea => {
       const btn = document.createElement('div');
       btn.textContent = idea;
-      btn.style.cssText = 'padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-mid);cursor:pointer;font-size:13px;transition:all 0.15s;';
+      btn.dataset.selected = 'true';
+      btn.style.cssText = 'padding:10px 14px;border-radius:10px;border:1px solid var(--accent);background:rgba(0,217,126,0.12);color:var(--accent);cursor:pointer;font-size:13px;transition:all 0.15s;';
       btn.addEventListener('click', () => {
         const selected = btn.dataset.selected === 'true';
         btn.dataset.selected = !selected;
