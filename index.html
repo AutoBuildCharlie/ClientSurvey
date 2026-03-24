@@ -347,7 +347,7 @@
       <p>Walk into any business, ask 7 simple questions, and walk out with a personalised automation pitch.</p>
     </div>
 
-    <div class="card">
+    <div class="card" id="setup-key-card">
       <div class="card-label">Your Settings</div>
       <div class="field">
         <label>Claude API Key</label>
@@ -597,10 +597,11 @@
     if (savedName) document.getElementById('your-name').value = savedName;
     // Show pitch counter
     document.getElementById('pitch-counter').textContent = pitchCount > 0 ? `${pitchCount} session${pitchCount !== 1 ? 's' : ''} run` : 'First session';
-    // Auto-skip setup if key already saved
+    // Hide API card if key already saved
     if (saved) {
       apiKey = saved;
       yourName = savedName || 'Cal';
+      document.getElementById('setup-key-card').style.display = 'none';
     }
   });
 
